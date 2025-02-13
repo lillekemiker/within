@@ -7,7 +7,7 @@
 pip install .
 
 # Install dev dependencies (for tests etc.)
-pip install -r requirements_dev.txt
+pip install '.[dev]'
 
 # Setup pre-commit hooks
 pre-commit install

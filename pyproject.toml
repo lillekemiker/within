@@ -1,0 +1,108 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "within"
+version = "0.0.0"
+dependencies = []
+requires-python = ">=3.10"
+authors = [
+  {name = "Martin Kristiansen", email = "lille.kemiker@gmail.com"}
+]
+maintainers = [
+  {name = "Martin Kristiansen", email = "lille.kemiker@gmail.com"}
+]
+description = "Within Takehome project"
+readme = "README.md"
+license = {text = "MIT"}
+classifiers = [
+  "Programming Language :: Python"
+]
+
+[project.optional-dependencies]
+dev = [
+  "black==25.1.0",
+  "flake8",
+  "isort",
+  "mypy",
+  "pre-commit",
+  "pytest",
+  "pytest-cov"
+]
+
+[project.urls]
+Repository = "https://github.com/lillekemiker/within.git"
+
+[project.scripts]
+run = "within.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+within = ["py.typed"]
+
+[tool.black]
+line-length = 88
+target-version = ['py310']
+include = '\.pyi?$'
+exclude = '''
+(
+  /(
+      \.eggs         # exclude a few common directories in the
+    | \.git          # root of the project
+    | \.hg
+    | \.mypy_cache
+    | \.tox
+    | \.venv
+    | _build
+    | buck-out
+    | dist
+  )/
+  | foo.py      # also separately exclude a file named foo.py
+)
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.mypy]
+files=["src/within/**/*.py", "tests/**/*.py"]
+ignore_missing_imports = true
+strict = true
+warn_return_any = true
+warn_unreachable = true
+no_implicit_optional = true
+show_error_codes = true
+
+[tool.flake8]
+max-line-length = 88
+select = ["E", "W", "F", "C", "B", "T4"]
+ignore = ["E203", "E266", "E501", "W503"]
+extend-ignore = ["B950"]
+max-complexity = 18
+
+[tool.coverage.run]
+source = ["src/within"]
+
+[tool.coverage.report]
+exclude_also = [
+    # Have to re-enable the standard pragma
+    "pragma: no cover",
+
+    # Don't complain about missing debug-only code:
+    "def __repr__",
+    "if self.debug",
+
+    # Don't complain if tests don't hit defensive assertion code:
+    "raise AssertionError",
+    "raise NotImplementedError",
+
+    # Don't complain if non-importable code isn't run:
+    "if __name__ == .__main__.:"
+]

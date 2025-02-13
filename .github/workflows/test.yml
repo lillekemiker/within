@@ -15,13 +15,12 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v1
         with:
-          python-version: 3.8
+          python-version: 3.10
 
       - name: Install dependencies with pip
         run: |
           pip install --upgrade pip wheel
-          pip install -r requirements_dev.txt
-          pip install .
+          pip install -e '.[dev]'
 
       - run: isort --check-only .
       - run: black --check .
