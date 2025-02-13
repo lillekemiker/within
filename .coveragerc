@@ -1,5 +1,5 @@
 [run]
-source = {{REPO_NAME}}
+source = within
 
 [report]
 exclude_lines =
