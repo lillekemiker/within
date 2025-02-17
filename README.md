@@ -13,3 +13,8 @@ pip install '.[dev]'
 pre-commit install
 ```
 
+## Running the code
+
+```sh
+run
+```
