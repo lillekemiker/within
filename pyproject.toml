@@ -38,6 +38,9 @@ dev = [
   "matplotlib==3.10.0",
   "types-requests"
 ]
+map = [
+  "plotly==6.0.0"
+]
 
 [project.urls]
 Repository = "https://github.com/lillekemiker/within.git"

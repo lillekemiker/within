@@ -27,6 +27,14 @@ POSSIBLE_TRANSPORTATION_MODES: List[TransportModeT] = [
 ]
 
 
+def _format_distance(dist_m: float) -> str:
+    if dist_m > 9999:
+        return f"{dist_m / 1000:.0f} km"
+    elif dist_m > 999:
+        return f"{dist_m / 1000:.1f} km"
+    return f"{dist_m:.0f} m"
+
+
 class EdgeDataT(TypedDict, total=False):
     length: float
     name: str | List[str]
@@ -38,15 +46,16 @@ class NodeT(TypedDict):
 
 
 class Route(BaseModel):
-    graph_node_idx: List[int]
+    node_idx: List[int]
     edges: Dict[Tuple[int, int], EdgeDataT]
     nodes: Dict[int, NodeT]
 
-    def _get_route_metric(self, metric: Literal["length"]) -> float:
-        return sum(
-            self.edges[(node_a, node_b)][metric]
-            for node_a, node_b in zip(self.graph_node_idx, self.graph_node_idx[1:])
-        )
+    @property
+    def path_coordinates(self) -> List[Dict[str, float]]:
+        return [
+            {"lat": self.nodes[idx]["y"], "lon": self.nodes[idx]["x"]}
+            for idx in self.node_idx
+        ]
 
     @property
     def total_length_m(self) -> float:
@@ -55,47 +64,71 @@ class Route(BaseModel):
     @property
     def description(self) -> List[str]:
         result: List[str] = []
-        current_bearing: Optional[float] = None
-        current_street: Optional[str] = None
-        acc_distance = 0.0
-        destination_node_idx = self.graph_node_idx[-1]
-        for node_a_idx, node_b_idx in zip(self.graph_node_idx, self.graph_node_idx[1:]):
-            node_a = self.nodes[node_a_idx]
-            node_b = self.nodes[node_b_idx]
+
+        current_bearing = new_bearing = self._get_node_to_node_berring(
+            self.node_idx[0], self.node_idx[1]
+        )
+        current_street: str = self._get_street_name(self.node_idx[0], self.node_idx[1])
+        acc_street_distance = 0.0
+        destination_node_idx = self.node_idx[-1]
+
+        for node_a_idx, node_b_idx in zip(self.node_idx, self.node_idx[1:]):
+            street = self._get_street_name(node_a_idx, node_b_idx)
             edge_data = self.edges[(node_a_idx, node_b_idx)]
-            street = edge_data.get("name", "unnamed street")
-            if isinstance(street, list):
-                # Street as two names
-                street = "/".join(street)
-            new_bearing = get_bearing(
-                node_a["y"], node_a["x"], node_b["y"], node_b["x"]
-            )
-            cardinal_direction = get_cardinal_direction(new_bearing)
-            acc_distance += edge_data["length"]
-            if street == current_street and node_a_idx != destination_node_idx:
+            edge_length = edge_data.get("length", 0)
+            assert isinstance(edge_length, float)
+            acc_street_distance += edge_length
+
+            if street == current_street and node_b_idx != destination_node_idx:
                 # continuing along the same street - skip instruction
                 continue
+
             # Otherwise turning onto a new street - output the instruction with
             # accumulated travel distance.
-            if current_bearing is None:
+            if not result:
                 # The first instruction
-                instruction = f"Head {cardinal_direction} on {current_street} "
+                init_direction = get_cardinal_direction(current_bearing)
+                instruction = f"Head {init_direction} on {current_street} "
+                dist_string = _format_distance(acc_street_distance)
+                result.append(instruction + f"and continue for {dist_string}")
             else:
-                turn = get_turning_instruction(current_bearing, new_bearing)
-                instruction = f"{turn} on {current_street} ({cardinal_direction}) "
-            # Format distance:
-            if acc_distance > 9999:
-                dist_string = f"{acc_distance / 1000:.0f} km"
-            elif acc_distance > 999:
-                dist_string = f"{acc_distance / 1000:.1f} km"
-            else:
-                dist_string = f"{acc_distance:.0f} m"
-            result.append(instruction + f"and continue for {dist_string}")
+                # Turning onto new street
+                turn_cardinal_direction = get_cardinal_direction(new_bearing)
+                turn_instr = get_turning_instruction(current_bearing, new_bearing)
+                instruction = (
+                    f"{turn_instr} on {current_street} ({turn_cardinal_direction}) "
+                )
+                dist_string = _format_distance(acc_street_distance)
+                result.append(instruction + f"and continue for {dist_string}")
+
             current_bearing = new_bearing
+            new_bearing = self._get_node_to_node_berring(node_a_idx, node_b_idx)
             current_street = street
-            acc_distance = 0
+            acc_street_distance = 0  # reset on new street
         result.append("Arriving at your destination.")
         return result
+
+    def _get_route_metric(self, metric: Literal["length"]) -> float:
+        return sum(
+            self.edges[(node_a, node_b)][metric]
+            for node_a, node_b in zip(self.node_idx, self.node_idx[1:])
+        )
+
+    def _get_node_to_node_berring(self, node_a_idx: int, node_b_idx: int) -> float:
+        node_a = self.nodes[node_a_idx]
+        node_b = self.nodes[node_b_idx]
+        return get_bearing(node_a["y"], node_a["x"], node_b["y"], node_b["x"])
+
+    def _get_street_name(
+        self, node_a_idx: int, node_b_idx: int, default: str = "unnamed street"
+    ) -> str:
+        edge_data = self.edges[(node_a_idx, node_b_idx)]
+        street = edge_data.get("name", default)
+        if isinstance(street, list):
+            # Street as two names
+            street = "/".join(street)
+        assert isinstance(street, str)
+        return street
 
 
 class Routing:
@@ -176,7 +209,7 @@ class Routing:
         )
         return [
             Route(
-                graph_node_idx=idx_list,
+                node_idx=idx_list,
                 edges={
                     (node_a, node_b): self._edge_data[(node_a, node_b)]
                     for node_a, node_b in zip(idx_list, idx_list[1:])

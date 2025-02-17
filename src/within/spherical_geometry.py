@@ -3,13 +3,15 @@ from typing import Tuple
 
 EARTH_RADIUS = 6371  # km (average)
 
+CoordT = Tuple[float, float]  # (latitude, longitude)
+
 
 def great_circle_halfway_point(
     start_latitude: float,
     start_longitude: float,
     end_latitude: float,
     end_longitude: float,
-) -> Tuple[float, float]:
+) -> CoordT:
     """
     Half-way point along a great circle path between the two points.
     Return (latitude, longitude) in degrees.
