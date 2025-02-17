@@ -20,17 +20,19 @@ pre-commit install
 
 The entry point for running the code is the `run` command:
 
-> usage: run [-h] --start START --destination DESTINATION [--transport-mode {all_public,bike,drive,drive_service,walk}] > [--num-suggestions NUM_SUGGESTIONS] [--show-map]
-> 
-> options:
->   -h, --help            show this help message and exit
->   --start START         Start address
->   --destination DESTINATION
->                         Where you want to go
->   --transport-mode {all_public,bike,drive,drive_service,walk}
->                         Mode of transpotation
->   --num-suggestions NUM_SUGGESTIONS
->   --show-map            Visualize route on map
+```
+usage: run [-h] --start START --destination DESTINATION [--transport-mode {all_public,bike,drive,drive_service,walk}] [--num-suggestions NUM_SUGGESTIONS] [--show-map]
+
+options:
+  -h, --help            show this help message and exit
+  --start START         Start address
+  --destination DESTINATION
+                        Where you want to go
+  --transport-mode {all_public,bike,drive,drive_service,walk}
+                        Mode of transpotation
+  --num-suggestions NUM_SUGGESTIONS
+  --show-map            Visualize route on map
+```
 
 For example:
 
