@@ -35,7 +35,6 @@ dev = [
   "pytest",
   "pytest-cov",
   "scikit-learn==1.6.1",
-  "matplotlib==3.10.0",
   "types-requests"
 ]
 map = [

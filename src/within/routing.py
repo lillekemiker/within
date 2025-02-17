@@ -16,13 +16,13 @@ from within.spherical_geometry import (
     great_circle_halfway_point,
 )
 
-TransportModeT = Literal["all", "all_public", "bike", "drive", "drive_service", "walk"]
+TransportModeT = Literal["bike", "drive", "walk"]
 POSSIBLE_TRANSPORTATION_MODES: List[TransportModeT] = [
     # "all",
-    "all_public",
+    # "all_public",
     "bike",
     "drive",
-    "drive_service",
+    # "drive_service",
     "walk",
 ]
 
